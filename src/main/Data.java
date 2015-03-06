@@ -18,6 +18,8 @@ public class Data {
 	public static boolean isDiscrete;
 	public static int[] bestFeature;
 	
+	public static final int NEIGHBOR_NUM = 7;
+	
 	private static int featureDataNum = -1, labelDataNum = -1;
 	
 	//set best feature in numeral order

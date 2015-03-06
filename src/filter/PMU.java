@@ -4,12 +4,17 @@ import java.util.ArrayList;
 
 import main.*;
 
-public class AMI {
+/**
+ * @author nerrtica
+ * @since 2015/02/09
+ */
+public class PMU {
 	private static double[][] featureTable;
 	private static double[] singleFeatureEntropy;
 	private static double[] singleLabelEntropy;
 	private static double[][] featureLabelEntropy;
 	private static double[][] doubleFeatureEntropy;
+	private static double[][] doubleLabelEntropy;
 	private static double[] J;
 	private static boolean[] pickedFeature;
 	private static int[] bestFeature;
@@ -22,6 +27,7 @@ public class AMI {
 		singleLabelEntropy = new double[Data.labelNum];
 		featureLabelEntropy = new double[Data.featureNum][Data.labelNum];
 		doubleFeatureEntropy = new double[Data.featureNum][Data.featureNum];
+		doubleLabelEntropy = new double[Data.labelNum][Data.labelNum];
 		bestFeature = new int[Data.featureNum];
 		J = new double[Data.featureNum];
 		pickedFeature = new boolean[Data.featureNum];
@@ -90,6 +96,12 @@ public class AMI {
 			for (int j = 0; j < Data.featureNum; j++) {
 				doubleFeatureEntropy[i][j] = calculEntropy(featureTable[i], featureTable[j]);
 				doubleFeatureEntropy[j][i] = doubleFeatureEntropy[i][j];
+			}
+		}
+		for (int i = 0; i < Data.labelNum; i++) {
+			for (int j = 0; j < Data.labelNum; j++) {
+				doubleLabelEntropy[i][j] = calculEntropy(i, j);
+				doubleLabelEntropy[j][i] = doubleLabelEntropy[i][j];
 			}
 		}
 	}
@@ -189,11 +201,108 @@ public class AMI {
 		return result * -1;
 	}
 	
+	private static double calculEntropy (int labelNum1, int labelNum2) {
+		double[] label = new double[Data.dataNum];
+		for (int i = 0; i < Data.dataNum; i++) {
+			label[i] = 0;
+			if (Data.label[i][labelNum1]) { label[i] += 10; }
+			if (Data.label[i][labelNum2]) { label[i] += 1; }
+		}
+		
+		Sort.quickSort(label, 0, Data.dataNum - 1);
+		
+		double value = label[0];
+		int count = 0;
+		double result = 0;
+		for (int i = 0; i < Data.dataNum; i++) {
+			if (label[i] != value || i == Data.dataNum - 1) {
+				if (i == Data.dataNum - 1) { count++; }
+				double p = (double)count / (double)Data.dataNum;
+				result += p * Math.log(p);
+				value = label[i];
+				count = 0;
+			}
+			count++;
+		}
+		return result * -1;
+	}
+	
+	private static double calculEntropy (double[] feature1, double[] feature2, int labelNum) {
+		double[][] data = new double[Data.dataNum][3];
+		for (int i = 0; i < Data.dataNum; i++) {
+			data[i][0] = feature1[i];
+			data[i][1] = feature2[i];
+			data[i][2] = i;
+		}
+		Sort.quickSort(data, 0, Data.dataNum - 1, true);
+		
+		double value1 = data[0][0], value2 = data[0][1];
+		int numof0 = 0, numof1 = 0;
+		double result = 0;
+		for (int i = 0; i < Data.dataNum; i++) {
+			if (data[i][0] != value1 || data[i][1] != value2 || i == Data.dataNum - 1) {
+				if (i == Data.dataNum - 1) { 
+					if (Data.label[(int)data[i][2]][labelNum]) { numof1++; }
+					else { numof0++; }
+				}
+				double p = (double)numof0 / (double)Data.dataNum;
+				if (p != 0) { result += p * Math.log(p); }
+				p = (double)numof1 / (double)Data.dataNum;
+				if (p != 0) { result += p * Math.log(p); }
+				value1 = data[i][0];
+				value2 = data[i][1];
+				numof0 = 0;
+				numof1 = 0;
+			}
+			if (Data.label[(int)data[i][2]][labelNum]) { numof1++; }
+			else { numof0++; }
+		}
+		return result * -1;
+	}
+	
+	private static double calculEntropy (double[] feature, int labelNum1, int labelNum2) {
+		double[][] data = new double[Data.dataNum][3];
+		for (int i = 0; i < Data.dataNum; i++) {
+			data[i][0] = feature[i];
+			data[i][1] = 0;
+			if (Data.label[i][labelNum1]) { data[i][1] += 10; }
+			if (Data.label[i][labelNum2]) { data[i][1] += 1; }
+		}
+		Sort.quickSort(data, 0, Data.dataNum - 1, true);
+		
+		double value1 = data[0][0], value2 = data[0][1];
+		int count = 0;
+		double result = 0;
+		for (int i = 0; i < Data.dataNum; i++) {
+			if (data[i][0] != value1 || data[i][1] != value2 || i == Data.dataNum - 1) {
+				if (i == Data.dataNum - 1) { count++; }
+				double p = (double)count / (double)Data.dataNum;
+				result += p * Math.log(p);
+				value1 = data[i][0];
+				value2 = data[i][1];
+				count = 0;
+			}
+			count++;
+		}
+		return result * -1;
+	}
+	
 	private static void makeInitialJ () {
 		for (int i = 0; i < Data.featureNum; i++) {
 			double result = 0;
 			for (int j = 0; j < Data.labelNum; j++) {
 				result += singleFeatureEntropy[i] + singleLabelEntropy[j] - featureLabelEntropy[i][j];
+			}
+			for (int j = 0; j < Data.labelNum; j++) {
+				for (int k = 0; k < Data.labelNum; k++) {
+					result -= singleFeatureEntropy[i] + singleLabelEntropy[j];
+					if (j != k) { result -= singleLabelEntropy[k]; }
+					result += featureLabelEntropy[i][j];
+					if (j != k) {
+						result += featureLabelEntropy[i][k] + doubleLabelEntropy[j][k];
+						result -= calculEntropy(featureTable[i], j, k);
+					}
+				}
 			}
 			J[i] = result;
 			pickedFeature[i] = false;
@@ -203,7 +312,11 @@ public class AMI {
 	private static void updateJ (int bestFeature) {
 		for (int i = 0; i < Data.featureNum; i++) {
 			if (pickedFeature[i]) { continue; }
-			J[i] -= singleFeatureEntropy[i] + singleFeatureEntropy[bestFeature] - doubleFeatureEntropy[i][bestFeature];
+			for (int j = 0; j < Data.labelNum; j++) {
+				J[i] -= singleFeatureEntropy[i] + singleFeatureEntropy[bestFeature] + singleLabelEntropy[j];
+				J[i] += doubleFeatureEntropy[i][bestFeature] + featureLabelEntropy[i][j] + featureLabelEntropy[bestFeature][j];
+				J[i] -= calculEntropy(featureTable[i], featureTable[bestFeature], j);
+			}
 		}
 	}
 	

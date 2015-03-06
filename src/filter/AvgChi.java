@@ -45,8 +45,8 @@ public class AvgChi {
 	}
 	
 	private static double calculInterval (int index) {
-		min = Double.MAX_VALUE;
-		max = Double.MIN_VALUE;
+		min = Double.POSITIVE_INFINITY;
+		max = Double.NEGATIVE_INFINITY;
 		
 		for (int i = 0; i < Data.dataNum; i++) {
 			if (Data.feature[i][index] < min) { min = Data.feature[i][index]; }
