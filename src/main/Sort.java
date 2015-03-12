@@ -35,9 +35,10 @@ public class Sort {
 	
 	public static void quickSort (double[][] arr, int left, int right, boolean isFirst) {
 		if (isFirst) {
+			//Has bug
 			if (left == right) { return; }
-			double pivotValue = arr[left][0];
-			int pivot = (int)arr[left][1], temp = (int)arr[left][2], lHold = left, rHold = right;
+			double pivotValue = arr[left][0], temp = arr[left][1];
+			int pivot = (int)arr[left][2], lHold = left, rHold = right;
 			
 			while (left < right) {
 				while ((arr[right][0] <= pivotValue) && (left < right)) { right--; }
@@ -56,13 +57,15 @@ public class Sort {
 				}
 			}
 			arr[left][0] = pivotValue;
-			arr[left][1] = pivot;
-			arr[left][2] = temp;
+			arr[left][1] = temp;
+			arr[left][2] = pivot;
 			pivot = left;
 			left = lHold;
 			right = rHold;
-			if (left < pivot) { quickSort(arr, left, pivot - 1); }
-			if (right > pivot) { quickSort(arr, pivot + 1, right); }
+			if (left < pivot) { quickSort(arr, left, pivot - 1, true); }
+			if (right > pivot) { quickSort(arr, pivot + 1, right, true); }
+			
+			if (lHold != 0 || rHold != Data.dataNum - 1) { return; }
 			
 			double value = arr[left][0];
 			int start = left, end;

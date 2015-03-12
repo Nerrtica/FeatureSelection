@@ -1,29 +1,80 @@
 package wrapper;
 
-import main.*;
-
 import java.util.ArrayList;
+
+import main.*;
 
 /**
  * @author nerrtica
  * @since 2015/01/28
  */
-public class Wrapper {
+public class SFFS {
 	private static ArrayList<Double>[] featureList;
 	private static double[] accuracy;
+	public static int add, delete;
 	public static ArrayList<String> result = new ArrayList<String>();
 	
 	@SuppressWarnings("unchecked")
-	public static void play () {
+	public static void play (int add, int delete) {
+		SFFS.add = add;
+		SFFS.delete = delete;
+		if (add <= delete) { System.out.println("Error!"); return; }
+		
 		featureList = (ArrayList<Double>[])new ArrayList[Data.dataNum];
 		accuracy = new double[Data.featureNum];
 		
-		for (int i = 0; i < Data.featureNum; i++) {
-			makeFeatureList(i);
-			addFeature(i);
-			accuracy[i] = calculAccuracy();
+		for (int i = 0; (i + add) < Data.featureNum; i += (add - delete)) {
+			int bestFeature = selectBestFeature(i);
+			alignBestFeature(bestFeature, i);
 		}
 		printResult();
+	}
+	
+	private static int selectBestFeature (int index) {
+		double max = Double.NEGATIVE_INFINITY;
+		int bestFeature = 0;
+		
+		for (int i = 0; i < add; i++) {
+			max = Double.NEGATIVE_INFINITY;
+			for (int j = index + i; j < Data.featureNum; j++) {
+				makeFeatureList(index + i);
+				addFeature(j);
+				double temp = calculAccuracy();
+				if (temp > max) {
+					max = temp;
+					bestFeature = j;
+				}
+			}
+			alignBestFeature(bestFeature, index + i);
+		}
+		//accuracy!!!
+		
+		for (int i = 0; i < delete; i++) {
+			max = Double.NEGATIVE_INFINITY;
+			for (int j = 0; j < index + add - i; j++) {
+				makeFeatureList(index + add - i);
+				deleteFeature(j);
+				double temp = calculAccuracy();
+				if (temp > max) {
+					max = temp;
+					bestFeature = j;
+				}
+			}
+			alignBestFeature(bestFeature, Data.featureNum - 1);
+		}
+		
+		for (int i = index; i < Data.featureNum; i++) {
+			makeFeatureList(index);
+			addFeature(i);
+			double temp = calculAccuracy();
+			if (temp > max) {
+				max = temp;
+				bestFeature = i;
+			}
+		}
+		//accuracy[index] = max;
+		
+		return bestFeature;
 	}
 	
 	private static void makeFeatureList (int index) {
@@ -38,6 +89,12 @@ public class Wrapper {
 	private static void addFeature (int addFeature) {
 		for (int i = 0; i < Data.dataNum; i++) {
 			featureList[i].add(Data.feature[i][Data.bestFeature[addFeature]]);
+		}
+	}
+	
+	private static void deleteFeature (int deleteFeature) {
+		for (int i = 0; i < Data.dataNum; i++) {
+			featureList[i].remove(deleteFeature);
 		}
 	}
 	
@@ -110,10 +167,30 @@ public class Wrapper {
 		return (double)error / (double)Data.labelNum;
 	}*/
 	
+	private static void alignBestFeature (int src, int dest) {
+		if (src > dest) {
+	        int temp1 = Data.bestFeature[dest];
+	        Data.bestFeature[dest] = Data.bestFeature[src];
+	        for (int i = dest + 1; i <= src; i++) {
+	            int temp2 = Data.bestFeature[i];
+	            Data.bestFeature[i] = temp1;
+	            temp1 = temp2;
+	        }
+	    } else {
+	        int temp1 = Data.bestFeature[dest];
+	        Data.bestFeature[dest] = Data.bestFeature[src];
+	        for (int i = dest - 1; i >= src; i--) {
+	            int temp2 = Data.bestFeature[i];
+	            Data.bestFeature[i] = temp1;
+	            temp1 = temp2;
+	        }
+	    }
+	}
+	
 	private static void printResult () {
 		for (int i = 0; i < Data.featureNum; i++) {
-			result.add(String.format("%3d개의 feature 사용 - 정확도 : %.6f", i + 1, accuracy[i]));
-			System.out.printf("%3d개의 feature 사용 - 정확도 : %.6f\n", i + 1, accuracy[i]);
+			result.add(String.format("feature %3d 추가, %3d개의 feature 사용 - 정확도 : %.6f", Data.bestFeature[i] + 1, i + 1, accuracy[i]));
+			//System.out.printf("feature %3d 추가, %3d개의 feature 사용 - 정확도 : %.6f", Data.bestFeature[i] + 1, i + 1, accuracy[i]);
 		}
 	}
 }

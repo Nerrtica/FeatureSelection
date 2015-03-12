@@ -1,14 +1,14 @@
 package wrapper;
 
-import main.*;
-
 import java.util.ArrayList;
+
+import main.*;
 
 /**
  * @author nerrtica
  * @since 2015/01/28
  */
-public class Wrapper {
+public class SFS {
 	private static ArrayList<Double>[] featureList;
 	private static double[] accuracy;
 	public static ArrayList<String> result = new ArrayList<String>();
@@ -19,11 +19,28 @@ public class Wrapper {
 		accuracy = new double[Data.featureNum];
 		
 		for (int i = 0; i < Data.featureNum; i++) {
-			makeFeatureList(i);
-			addFeature(i);
-			accuracy[i] = calculAccuracy();
+			int bestFeature = selectBestFeature(i);
+			alignBestFeature(bestFeature, i);
 		}
 		printResult();
+	}
+	
+	private static int selectBestFeature (int index) {
+		double max = Double.NEGATIVE_INFINITY;
+		int bestFeature = 0;
+		
+		for (int i = index; i < Data.featureNum; i++) {
+			makeFeatureList(index);
+			addFeature(i);
+			double temp = calculAccuracy();
+			if (temp > max) {
+				max = temp;
+				bestFeature = i;
+			}
+		}
+		accuracy[index] = max;
+		
+		return bestFeature;
 	}
 	
 	private static void makeFeatureList (int index) {
@@ -110,10 +127,30 @@ public class Wrapper {
 		return (double)error / (double)Data.labelNum;
 	}*/
 	
+	private static void alignBestFeature (int src, int dest) {
+		if (src > dest) {
+	        int temp1 = Data.bestFeature[dest];
+	        Data.bestFeature[dest] = Data.bestFeature[src];
+	        for (int i = dest + 1; i <= src; i++) {
+	            int temp2 = Data.bestFeature[i];
+	            Data.bestFeature[i] = temp1;
+	            temp1 = temp2;
+	        }
+	    } else {
+	        int temp1 = Data.bestFeature[dest];
+	        Data.bestFeature[dest] = Data.bestFeature[src];
+	        for (int i = dest - 1; i >= src; i--) {
+	            int temp2 = Data.bestFeature[i];
+	            Data.bestFeature[i] = temp1;
+	            temp1 = temp2;
+	        }
+	    }
+	}
+	
 	private static void printResult () {
 		for (int i = 0; i < Data.featureNum; i++) {
-			result.add(String.format("%3d개의 feature 사용 - 정확도 : %.6f", i + 1, accuracy[i]));
-			System.out.printf("%3d개의 feature 사용 - 정확도 : %.6f\n", i + 1, accuracy[i]);
+			result.add(String.format("feature %3d 추가, %3d개의 feature 사용 - 정확도 : %.6f", Data.bestFeature[i] + 1, i + 1, accuracy[i]));
+			System.out.printf("feature %3d 추가, %3d개의 feature 사용 - 정확도 : %.6f\n", Data.bestFeature[i] + 1, i + 1, accuracy[i]);
 		}
 	}
 }

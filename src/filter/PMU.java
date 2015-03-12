@@ -90,16 +90,16 @@ public class PMU {
 	
 	private static void makeDoubleEntropy () {
 		for (int i = 0; i < Data.featureNum; i++) {
-			for (int j = 0; j < Data.labelNum; j++) {
-				featureLabelEntropy[i][j] = calculEntropy(featureTable[i], j);
-			}
-			for (int j = 0; j < Data.featureNum; j++) {
+			for (int j = i + 1; j < Data.featureNum; j++) {
 				doubleFeatureEntropy[i][j] = calculEntropy(featureTable[i], featureTable[j]);
 				doubleFeatureEntropy[j][i] = doubleFeatureEntropy[i][j];
 			}
+			for (int j = 0; j < Data.labelNum; j++) {
+				featureLabelEntropy[i][j] = calculEntropy(featureTable[i], j);
+			}
 		}
 		for (int i = 0; i < Data.labelNum; i++) {
-			for (int j = 0; j < Data.labelNum; j++) {
+			for (int j = i + 1; j < Data.labelNum; j++) {
 				doubleLabelEntropy[i][j] = calculEntropy(i, j);
 				doubleLabelEntropy[j][i] = doubleLabelEntropy[i][j];
 			}

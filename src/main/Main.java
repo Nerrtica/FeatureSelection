@@ -1,7 +1,7 @@
 package main;
 
-import wrapper.Wrapper;
 import filter.*;
+import wrapper.*;
 
 /**
  * @author nerrtica
@@ -15,8 +15,8 @@ public class Main {
 		//gui.mainMenu();
 		
 		try {
-			Data.readFeature("/Users/nerrtica/Documents/Study/3rdYear/PE/Data/scene/feature.csv", false);
-			Data.readLabel("/Users/nerrtica/Documents/Study/3rdYear/PE/Data/scene/label.csv");
+			Data.readFeature("/Users/nerrtica/Documents/Study/3rdYear/PE/Data/CAL500/feature.csv", false);
+			Data.readLabel("/Users/nerrtica/Documents/Study/3rdYear/PE/Data/CAL500/label.csv");
 		} catch (Exception e) {
 			
 		}
@@ -25,10 +25,9 @@ public class Main {
 		//AvgChi.play();
 		//LPChi.play();
 		//AMI.play();
-		PMU.play();
+		//PMU.play();
 		
-		Wrapper wrap = new Wrapper();
-		wrap.play();
+		SFS.play();
 	}
 
 }
